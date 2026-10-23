@@ -252,3 +252,88 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ── Charts ───────────────────────────────────────────────────────────────
+   One data hue (blue), kept apart from the red accent so a count never reads
+   as an alarm. Bars use one step; the heatmap a five-step ramp that runs
+   light→dark on light panels and dark→light on dark ones, so "little" always
+   recedes toward the panel. Steps and the ink set inside each were checked
+   for contrast and colour-blind separation against both panels. */
+
+.cc-root {
+  --viz-1: #3987e5;
+  --viz-seq-1: #184f95;
+  --viz-seq-2: #256abf;
+  --viz-seq-3: #3987e5;
+  --viz-seq-4: #6da7ec;
+  --viz-seq-5: #9ec5f4;
+  --viz-ink-1: #ffffff;
+  --viz-ink-2: #ffffff;
+  --viz-ink-3: #0b0b0b;
+  --viz-ink-4: #0b0b0b;
+  --viz-ink-5: #0b0b0b;
+}
+.cc-root[data-theme="light"] {
+  --viz-1: #2a78d6;
+  --viz-seq-1: #86b6ef;
+  --viz-seq-2: #5598e7;
+  --viz-seq-3: #2a78d6;
+  --viz-seq-4: #1c5cab;
+  --viz-seq-5: #104281;
+  --viz-ink-1: #151518;
+  --viz-ink-2: #151518;
+  --viz-ink-3: #ffffff;
+  --viz-ink-4: #ffffff;
+  --viz-ink-5: #ffffff;
+}
+
+.viz-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--viz-1);
+  border-radius: 0 4px 4px 0;
+}
+.viz-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  min-width: 52px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: rgb(var(--tint-1) / var(--tint-1-a));
+  outline-offset: 1px;
+  transition: filter var(--fast);
+}
+.viz-cell:hover,
+.viz-cell:focus-visible {
+  filter: brightness(1.12);
+}
+.viz-cell[data-bin="1"], .viz-swatch[data-bin="1"] { background: var(--viz-seq-1); color: var(--viz-ink-1); }
+.viz-cell[data-bin="2"], .viz-swatch[data-bin="2"] { background: var(--viz-seq-2); color: var(--viz-ink-2); }
+.viz-cell[data-bin="3"], .viz-swatch[data-bin="3"] { background: var(--viz-seq-3); color: var(--viz-ink-3); }
+.viz-cell[data-bin="4"], .viz-swatch[data-bin="4"] { background: var(--viz-seq-4); color: var(--viz-ink-4); }
+.viz-cell[data-bin="5"], .viz-swatch[data-bin="5"] { background: var(--viz-seq-5); color: var(--viz-ink-5); }
+.viz-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 10px;
+  border-radius: 3px;
+  background: rgb(var(--tint-1) / var(--tint-2-a));
+}
+.viz-tip {
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 10px));
+  max-width: 280px;
+  padding: 7px 10px;
+  border-radius: var(--r-sm);
+  background: rgb(var(--overlay));
+  border: 1px solid var(--hairline-strong);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+  font-size: 12px;
+  line-height: 1.4;
+}

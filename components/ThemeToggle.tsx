@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { THEME_KEY } from "./theme";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Theme = "dark" | "light" | "system";
 
-const KEY = "cc-theme";
+const KEY = THEME_KEY;
 
 /**
  * Writes data-theme onto the .cc-root wrapper. The choice is stored per
@@ -76,13 +77,4 @@ export function ThemeToggle() {
       ))}
     </div>
   );
-}
-
-/**
- * Applied before React hydrates so a light-theme user does not get a dark
- * flash on every navigation. Kept tiny and dependency-free on purpose.
- */
-export function ThemeScript() {
-  const js = `(function(){try{var t=localStorage.getItem('${KEY}')||'system';var r=document.querySelector('.cc-root');if(!r)return;var d=t==='system'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):t;r.setAttribute('data-theme',d);}catch(e){}})();`;
-  return <script dangerouslySetInnerHTML={{ __html: js }} />;
 }

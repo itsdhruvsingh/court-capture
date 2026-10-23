@@ -38,7 +38,8 @@ export async function GET(req: Request) {
       query = query.in("id", ids);
     }
     if (q) query = query.or(`title.ilike.*${q}*,case_number.ilike.*${q}*,cnr.ilike.*${q}*,advocate_names.ilike.*${q}*`);
-    if (type) query = query.eq("case_type_code", type);
+    // The printed type ("CC NI ACT"): the court's codes repeat across establishments.
+    if (type) query = query.eq("case_type", type);
     if (status === "pending" || status === "disposed") query = query.eq("status", status);
     if (status === "listed") query = query.neq("detail_status", "fetched");
 

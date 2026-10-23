@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Gavel, Landmark, LogOut, Menu, Radio, ScrollText, UserRound, Users, X } from "lucide-react";
+import { ChartBar, Gavel, Grid3x3, Landmark, LogOut, Menu, Radio, ScrollText, UserRound, Users, X } from "lucide-react";
 import { cn, initialsOf } from "@/lib/utils";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { ThemeToggle } from "./ThemeToggle";
@@ -16,6 +16,7 @@ const SECTIONS = [
     items: [
       { href: "/district", label: "Cases", icon: Landmark, exact: true },
       { href: "/district/advocates", label: "Advocates", icon: Users },
+      { href: "/district/case-types", label: "Case types", icon: ChartBar },
     ],
   },
   {
@@ -23,6 +24,7 @@ const SECTIONS = [
     items: [
       { href: "/high-court", label: "Judgments", icon: ScrollText, exact: true },
       { href: "/high-court/judges", label: "Judges", icon: UserRound },
+      { href: "/high-court/case-types", label: "Case types & judges", icon: Grid3x3 },
     ],
   },
   {

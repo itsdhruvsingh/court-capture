@@ -18,6 +18,10 @@ const csp = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    // Size build workers by free memory, not CPU count: one per CPU ran a 16-core laptop out of memory.
+    memoryBasedWorkersCount: true,
+  },
   // The extension zip is built from the extension folder at request time.
   outputFileTracingIncludes: {
     "/api/capture/extension": ["./extension/**"],

@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type-check
+        run: npm run typecheck
+      - name: Extension syntax
+        run: for f in extension/*.js; do node --check "$f"; done
+      - name: Parsers, against real court pages
+        run: npm test
+      - name: Database, every migration on Postgres 14
+        run: npm run test:sql
+      - name: Production build
+        run: npm run build
+        env:
+          # The build only needs the public settings to exist; nothing is called.
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder

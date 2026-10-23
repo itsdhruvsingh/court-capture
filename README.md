@@ -1,5 +1,7 @@
 # Court Capture
 
+[![CI](https://github.com/itsdhruvsingh/court-capture/actions/workflows/ci.yml/badge.svg)](https://github.com/itsdhruvsingh/court-capture/actions/workflows/ci.yml)
+
 Reads Indian court records into a searchable database. It covers two courts:
 
 - **Saket District Court**, through the eCourts portal.
@@ -10,6 +12,7 @@ A browser extension drives each court's own public search page, and a person typ
 - the advocates on each case;
 - the timeline of hearings and orders;
 - judgments by judge and case type;
+- case-type breakdowns: Saket's caseload by type and court, from the court's own counts, and each High Court judge's mix of case types;
 - one-click AI summaries, saved so each one is written only once.
 
 ## What it captures
@@ -23,15 +26,17 @@ Each court's search is kept as the court answered it, both the listing and the H
 
 ## How it works
 
-```
- court's search page ──► extension: fills the form, the person types the captcha, reads the page
-                               │  (background worker, connection token)
-                               ▼
-                         /api/capture/*  ──►  Supabase Postgres
-                               │
-                               └─ after replying: PDFs and texts ──►  Cloudflare R2
-
- web app (Next.js)  ◄──  Supabase + R2        "Summarise" ──► OpenAI ──► saved on the record
+```mermaid
+flowchart LR
+  subgraph browser ["The person's browser"]
+    person(("Person")) -- "types each captcha" --> page["Court's own search page"]
+    ext["Extension<br/>fills the form, reads the page"] <--> page
+  end
+  ext -- "what next? / here is what I read<br/>connection token + browser id" --> api["Next.js API<br/>plans and records"]
+  api <--> db[("Postgres<br/>work queue, cases, judgments")]
+  api --> r2[("Cloudflare R2<br/>order and judgment PDFs")]
+  web["Web app<br/>cases, advocates, judges, case types"] --> api
+  api -- "summary, written once" --> llm["OpenAI"]
 ```
 
 - **The server decides; the extension does the clicking.** The extension asks `next`, performs that one step on the court's page and reports what it read. Reports are idempotent, so a reload or a double click never stores anything twice.
@@ -41,6 +46,23 @@ Each court's search is kept as the court answered it, both the listing and the H
   - High Court PDFs and texts are fetched by the app, 4 seconds apart.
   - If a court shows its "Security Verification" page, fetching from that court stops (the app pauses for 30 minutes) instead of retrying.
 - **Captchas are typed by a person.** The extension never reads, solves or fills a captcha. The High Court prints its code as text in the page; the extension still leaves it to the person.
+
+## Engineering highlights
+
+- **Automation with a person in the loop.** The server plans every step and the extension carries it out on the court's own page, so the person's only job is the captcha. Reports are idempotent, so reloads, retries and double clicks are harmless.
+- **A shared work queue.** Several people's browsers split one run with no coordination: claims use `FOR UPDATE SKIP LOCKED` with five-minute leases renewed by heartbeat, and per-person counters update atomically in PL/pgSQL.
+- **Fewer captchas, from reading the court's own rules.**
+  - The High Court page says a search may cover one month, but its own check allows 25,000 days. One search per judge therefore lists everything they uploaded.
+  - Its results table pages in the browser, so the extension reads every row and sends the list gzipped. A run needs one captcha per judge instead of dozens.
+- **Counting what the courts actually mean.**
+  - The district court reuses type codes across its establishments: code 76 is four different case types. Counts and filters therefore follow the printed type.
+  - High Court totals count each case once, both when one judgment decides connected cases and when a bench lists a judgment under each judge. SQL views do this, and tests cover it.
+- **Polite by design.** Requests go one at a time, and a court's bot check stops fetching instead of being retried. District order PDFs come through the person's browser, because the court blocks servers.
+- **Cost control.** An AI summary is claimed in the database so two clicks pay once. It is kept forever, and a monthly budget caps spending.
+- **Tested against reality.**
+  - Parsers run against real captured court pages.
+  - CI runs every migration on Postgres 14.
+  - Every table has row-level security on.
 
 ## Using the extension
 
@@ -70,7 +92,7 @@ npm run dev                    # http://localhost:3100
 
 Then:
 
-1. **Database.** In Supabase, open the SQL Editor and run `supabase/migrations/0050` to `0053` in order. Each one is safe to re-run.
+1. **Database.** In Supabase, open the SQL Editor and run `supabase/migrations/0050` to `0054` in order. Each one is safe to re-run.
 2. **Accounts.** Add people under Supabase → Authentication → Users. Anyone with an account can use the app, so keep public sign-ups turned off.
 
 ## Deploying to Vercel
@@ -86,9 +108,11 @@ Then:
 | `/district` | Cases. Search, and filter by case type, status or advocate. |
 | `/district/[id]` | One case: parties and advocates, the hearing timeline, and orders with PDF and AI summary. |
 | `/district/advocates` | Advocates, by number of cases. Each one opens their cases. |
+| `/district/case-types` | The court's own count of cases by printed case type and by court, for each year and status searched, next to what is captured. |
 | `/high-court` | Judgments. Search by case number, party, citation or text, and filter by judge, case type or year. |
 | `/high-court/[id]` | One judgment: AI summary, PDF and full text. |
 | `/high-court/judges` | Sitting judges, with what has been captured for each. |
+| `/high-court/case-types` | Judgments by case type across every judge's full list, and a heatmap of each judge's mix of case types. |
 | `/capture` | Runs for both courts, progress per person, new runs, and connecting the extension. |
 
 ## API
@@ -120,15 +144,24 @@ The app's own calls need a signed-in session:
 
 **AI summaries:** `ai_usage` holds every summary's tokens and cost. Summaries stop for the month when spending reaches `AI_MONTHLY_BUDGET_USD`.
 
+**Case-type breakdowns:** read-only views compute them from the searches already stored (migration 0054):
+- `court_type_totals_v`
+- `hc_judge_lists_v`
+- `hc_judge_type_counts_v`
+- `hc_judge_year_counts_v`
+- `hc_type_counts_v`
+
 Every table has row-level security on and no policies, so only the server, using the secret key, can read or write them. PDFs are stored in R2 under `court-orders/`.
 
 ## Tests
 
 ```bash
 npm test            # both courts' parsers against real captured pages, bot-check detection, token signing
-npm run test:sql    # all migrations on a throwaway Postgres 14; claims, ingest, counters, summaries
+npm run test:sql    # all migrations on a throwaway Postgres 14; claims, ingest, counters, summaries, breakdowns
 npm run typecheck
 ```
+
+GitHub Actions runs all three on every push, then builds the app (`.github/workflows/ci.yml`).
 
 ## Layout
 
@@ -140,6 +173,7 @@ app/api/high-court/   what the app's pages call
 lib/district/         eCourts parser and engine (planner and recorder), orders
 lib/highcourt/        High Court parser and engine, documents, search dates
 lib/                  sign-in, R2 storage, polite fetching, AI summaries and budget, tokens
+components/           shared UI; viz.tsx draws the bar lists and the heatmap
 extension/            core.js (shared), district.js, highcourt.js, popup, background worker, connect helper
 supabase/migrations/  run these in order
 scripts/              tests and the court pages they read

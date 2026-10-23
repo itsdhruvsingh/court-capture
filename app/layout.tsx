@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Roboto_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeScript } from "@/components/ThemeToggle";
+import { ThemeScript } from "@/components/ThemeScript";
 
 const mono = Roboto_Mono({ subsets: ["latin"], weight: ["400"], variable: "--font-mono", display: "swap" });
 
