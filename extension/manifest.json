@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Court Capture",
+  "version": "2.0.0",
+  "description": "Reads court records into Court Capture — District Court (eCourts) and the High Court of Delhi. It drives the courts' own search pages; you type each captcha.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://southdelhi.dcourts.gov.in/*",
+    "https://delhihighcourt.nic.in/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "optional_host_permissions": ["https://*/*"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_popup": "popup.html", "default_title": "Court Capture" },
+  "content_scripts": [
+    {
+      "matches": ["https://southdelhi.dcourts.gov.in/case-status-search-by-case-type*"],
+      "js": ["core.js", "district.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://delhihighcourt.nic.in/app/sitting-judges-wise-data*"],
+      "js": ["core.js", "highcourt.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["http://localhost/capture*", "http://127.0.0.1/capture*"],
+      "js": ["connect.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

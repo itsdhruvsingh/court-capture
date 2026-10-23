@@ -1,0 +1,254 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Theme tokens ─────────────────────────────────────────────────────────
+   Every colour is an "R G B" triplet so Tailwind can apply opacity to it
+   (bg-accent/12 → rgb(var(--accent) / 0.12)). Dark is the default; the light
+   block redefines the same names and nothing else has to know. */
+
+.cc-root {
+  --accent: 228 52 42;
+  --accent-ink: 255 255 255;
+  --accent-hover: 239 65 54;
+  --accent-active: 209 46 37;
+  --accent-soft: 255 128 120;
+  --danger: 255 69 58;
+  --danger-soft: 255 106 94;
+
+  --canvas: 10 10 11;
+  --panel: 18 18 20;
+  --raised: 25 26 28;
+  --overlay: 30 31 34;
+
+  --text: 242 242 244;
+  --dim: 154 154 162;
+  --faint: 128 128 138;
+
+  --ok: 48 209 88;
+  --warn: 255 214 10;
+  --info: 10 132 255;
+
+  --tint-1: 255 255 255;
+  --tint-1-a: 0.035;
+  --tint-2-a: 0.065;
+  --tint-3-a: 0.11;
+  --sunken: 0 0 0;
+  --sunken-a: 0.25;
+  --scrim: 0 0 0;
+  --scrim-a: 0.65;
+
+  --hairline: rgba(255, 255, 255, 0.08);
+  --hairline-strong: rgba(255, 255, 255, 0.16);
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --fast: 130ms;
+  --base: 240ms;
+
+  color-scheme: dark;
+  min-height: 100vh;
+  background: rgb(var(--canvas));
+  color: rgb(var(--text));
+}
+
+.cc-root[data-theme="light"] {
+  color-scheme: light;
+  --accent: 197 41 32;
+  --accent-hover: 173 34 26;
+  --accent-active: 150 28 21;
+  --accent-soft: 168 33 25;
+  --danger: 186 32 24;
+  --danger-soft: 168 30 22;
+  --canvas: 244 244 246;
+  --panel: 255 255 255;
+  --raised: 255 255 255;
+  --overlay: 255 255 255;
+  --text: 21 21 24;
+  --dim: 82 82 92;
+  --faint: 105 105 116;
+  --ok: 13 116 55;
+  --warn: 141 106 0;
+  --info: 11 84 199;
+  --tint-1: 9 9 11;
+  --tint-1-a: 0.035;
+  --tint-2-a: 0.06;
+  --tint-3-a: 0.1;
+  --sunken: 9 9 11;
+  --sunken-a: 0.045;
+  --scrim: 24 24 28;
+  --scrim-a: 0.42;
+  --hairline: rgba(9, 9, 11, 0.12);
+  --hairline-strong: rgba(9, 9, 11, 0.24);
+}
+
+body {
+  margin: 0;
+  font-family: Satoshi, ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Components ─────────────────────────────────────────────────────────── */
+
+.cc-card {
+  position: relative;
+  background: rgb(var(--panel));
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+}
+.cc-root[data-theme="light"] .cc-card {
+  box-shadow: 0 1px 2px rgba(9, 9, 11, 0.05);
+}
+
+.cc-inset {
+  background: rgb(var(--tint-1) / var(--tint-1-a));
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+}
+
+.cc-label {
+  font-size: 11px;
+  font-weight: 560;
+  letter-spacing: 0.005em;
+  color: rgb(var(--faint));
+}
+
+.cc-mono {
+  font-family: var(--font-mono), ui-monospace, "SF Mono", monospace;
+  font-size: 11.5px;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.cc-input {
+  width: 100%;
+  background: rgb(var(--tint-1) / 0.04);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  padding: 8px 11px;
+  color: rgb(var(--text));
+  font-size: 13px;
+  transition: border-color var(--fast) var(--ease), background var(--fast) var(--ease);
+}
+.cc-input::placeholder {
+  color: rgb(var(--faint));
+}
+.cc-input:focus {
+  outline: none;
+  border-color: var(--hairline-strong);
+  background: rgb(var(--tint-1) / 0.06);
+}
+.cc-input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.cc-root option {
+  background-color: rgb(var(--overlay));
+  color: rgb(var(--text));
+}
+
+.cc-root :focus-visible {
+  outline: 2px solid rgb(var(--accent) / 0.6);
+  outline-offset: 2px;
+  border-radius: 5px;
+}
+
+.cc-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--r-sm);
+  color: rgb(var(--dim));
+  transition: color var(--fast) var(--ease), background var(--fast) var(--ease);
+}
+.cc-nav-item:hover {
+  color: rgb(var(--text));
+  background: rgb(var(--tint-1) / var(--tint-2-a));
+}
+.cc-nav-item[data-active="true"] {
+  color: rgb(var(--text));
+  background: rgb(var(--tint-1) / var(--tint-3-a));
+}
+
+.cc-root ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.cc-root ::-webkit-scrollbar-thumb {
+  background: rgb(var(--tint-1) / 0.14);
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+@keyframes ccShimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.cc-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgb(var(--tint-1) / 0.04);
+  border-radius: var(--r-sm);
+}
+.cc-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(var(--tint-1) / 0.05), transparent);
+  animation: ccShimmer 1.6s infinite;
+}
+
+@keyframes ccPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+.cc-pulse {
+  animation: ccPulse 1.8s var(--ease) infinite;
+}
+
+@keyframes ccSweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+.cc-sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 25%;
+  background: rgb(var(--tint-1) / 0.32);
+  animation: ccSweep 1.5s var(--ease) infinite;
+}
+
+/* Long court text, readable. */
+.cc-prose {
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: rgb(var(--dim));
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-root *,
+  .cc-root *::before,
+  .cc-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
